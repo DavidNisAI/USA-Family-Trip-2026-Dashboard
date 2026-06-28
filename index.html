@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
+<title>טיול ארה״ב 🇺🇸 — Dashboard</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans Hebrew", sans-serif;
+    background: linear-gradient(135deg, #f1f5f9 0%, #dbeafe 50%, #ede9fe 100%);
+    min-height: 100vh; color: #1f2937; line-height: 1.5;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 16px; }
+  @media (min-width: 768px) { .container { padding: 32px; } }
+
+  /* Header */
+  .hero {
+    position: relative; overflow: hidden; border-radius: 24px;
+    background: linear-gradient(120deg, #2563eb, #4f46e5, #7c3aed);
+    color: white; padding: 24px; box-shadow: 0 10px 30px rgba(79, 70, 229, .25);
+    margin-bottom: 20px;
+  }
+  .hero::before, .hero::after {
+    content:""; position:absolute; width:180px; height:180px; border-radius:50%;
+    background: rgba(255,255,255,.08); filter: blur(40px);
+  }
+  .hero::before { top:-40px; right:-40px; }
+  .hero::after { bottom:-40px; left:-40px; }
+  .hero-content { position: relative; display:flex; justify-content:space-between; flex-wrap:wrap; gap:16px; align-items:center; }
+  .hero h1 { margin:0; font-size: 28px; font-weight: 800; }
+  .hero p  { margin: 4px 0 0; opacity:.9; font-size: 16px; }
+  .stats { display:flex; gap:8px; flex-wrap:wrap; }
+  .stat {
+    background: rgba(255,255,255,.18); backdrop-filter: blur(8px);
+    padding: 8px 12px; border-radius: 14px; display:flex; align-items:center; gap:8px; font-size: 13px;
+  }
+  .stat b { font-size: 15px; }
+
+  /* Tabs */
+  .tabs { display:flex; gap:8px; flex-wrap: wrap; margin-bottom: 20px; }
+  .tab {
+    border: none; cursor: pointer; padding: 10px 16px; border-radius: 16px;
+    background: white; color: #374151; font-weight: 600; font-size: 14px;
+    box-shadow: 0 2px 6px rgba(0,0,0,.06); transition: all .2s;
+    display:flex; align-items:center; gap:6px; font-family: inherit;
+  }
+  .tab:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0,0,0,.08); }
+  .tab.active { background: #4f46e5; color: white; box-shadow: 0 4px 12px rgba(79,70,229,.35); }
+
+  /* Cards */
+  .card { background:white; border-radius:20px; box-shadow: 0 4px 14px rgba(0,0,0,.06); overflow: hidden; margin-bottom: 14px; }
+  .card-pad { padding: 16px; }
+
+  /* Toolbar */
+  .toolbar { display:flex; flex-direction:column; gap:12px; }
+  @media (min-width: 768px) { .toolbar { flex-direction:row; align-items:center; } }
+  .search { position: relative; flex: 1; }
+  .search input {
+    width:100%; padding: 12px 40px 12px 14px; border: 1px solid #e5e7eb; border-radius: 14px;
+    font-size: 15px; font-family: inherit; outline: none; transition: border .2s;
+  }
+  .search input:focus { border-color: #4f46e5; }
+  .search::before { content: "🔍"; position:absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 14px; opacity:.6; }
+  .chips { display:flex; gap: 6px; flex-wrap: wrap; }
+  .chip {
+    border: none; cursor: pointer; padding: 7px 12px; border-radius: 20px;
+    background: #f3f4f6; color: #374151; font-size: 12px; font-weight: 600;
+    transition: all .2s; font-family: inherit;
+  }
+  .chip:hover { background: #e5e7eb; }
+  .chip.active { background: #4f46e5; color: white; box-shadow: 0 2px 6px rgba(79,70,229,.3); }
+
+  /* Day */
+  .day-head {
+    width:100%; border: none; cursor: pointer; color: white; padding: 16px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: inherit; font-size: 15px;
+  }
+  .day-head:hover { filter: brightness(1.05); }
+  .day-head .right { display:flex; align-items:center; gap:12px; text-align: right; }
+  .day-emoji { font-size: 28px; }
+  .day-date { font-size: 19px; font-weight: 800; }
+  .day-sub { font-size: 13px; opacity:.95; }
+  .pill { background: rgba(255,255,255,.22); padding: 4px 10px; border-radius: 14px; font-size: 12px; font-weight: 600; }
+  .chev { width: 20px; height: 20px; transition: transform .25s; }
+  .open .chev { transform: rotate(180deg); }
+  .day-body { display:none; padding: 12px; }
+  .open .day-body { display: block; }
+
+  /* Item */
+  .item {
+    display:flex; gap: 12px; align-items: flex-start; padding: 12px;
+    background: #f9fafb; border-radius: 14px; margin-bottom: 8px; transition: background .2s;
+  }
+  .item:hover { background: #f3f4f6; }
+  .item .ic {
+    flex-shrink: 0; width: 38px; height: 38px; border-radius: 12px;
+    display:flex; align-items:center; justify-content:center; font-size: 18px;
+  }
+  .item .body { flex: 1; min-width: 0; }
+  .item .row1 { display:flex; align-items:center; gap:8px; flex-wrap: wrap; }
+  .item .title { font-weight: 700; color: #111827; font-size: 14px; }
+  .item .title a { color: #4f46e5; text-decoration: none; border-bottom: 1px dashed #c7d2fe; }
+  .item .title a:hover { color: #4338ca; border-bottom-style: solid; }
+  .map-btn {
+    display:inline-flex; align-items:center; gap:3px;
+    text-decoration:none; background:#eef2ff; color:#4f46e5;
+    padding: 2px 8px; border-radius: 8px; font-size: 11px; font-weight: 700;
+    border: 1px solid #c7d2fe; transition: all .2s;
+  }
+  .map-btn:hover { background: #4f46e5; color: white; border-color: #4f46e5; }
+  .item .time { font-size: 11px; padding: 2px 8px; border-radius: 8px; border: 1px solid #d1d5db; background: white; color: #4b5563; font-weight: 600; }
+  .item .note { font-size: 13px; color: #6b7280; margin-top: 3px; }
+
+  .notes-box {
+    margin-top: 10px; padding: 12px; border-radius: 12px;
+    background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c;
+  }
+  .notes-box b { display:block; margin-bottom: 4px; }
+  .notes-box ul { margin: 0; padding-right: 18px; font-size: 13px; }
+
+  /* Hotels / transport */
+  .grid2 { display: grid; gap: 14px; grid-template-columns: 1fr; }
+  @media (min-width: 768px) { .grid2 { grid-template-columns: 1fr 1fr; } }
+  .hotel-head, .section-head {
+    background: linear-gradient(120deg, #2563eb, #4f46e5);
+    color: white; padding: 16px;
+  }
+  .hotel-head h3, .section-head h3 { margin: 0; font-size: 18px; }
+  .hotel-head p, .section-head p { margin: 4px 0 0; opacity:.9; font-size: 13px; }
+  .hotel-head a, .section-head a {
+    color: white; display:inline-flex; gap:4px; align-items:center;
+    font-size: 13px; margin-top: 6px; opacity:.95; text-decoration:none;
+    background: rgba(255,255,255,.15); padding: 4px 10px; border-radius: 10px;
+  }
+  .hotel-head a:hover, .section-head a:hover { background: rgba(255,255,255,.25); }
+
+  .room {
+    display:flex; justify-content:space-between; align-items:center;
+    background: #f9fafb; padding: 12px; border-radius: 12px; margin-bottom: 8px;
+  }
+  .room .info b { display:block; font-size: 14px; }
+  .room .info span { font-size: 12px; color: #6b7280; }
+  .conf { background: #4f46e5; color: white; padding: 5px 11px; border-radius: 10px; font-size: 12px; font-weight: 700; }
+
+  /* Games */
+  .grid3 { display:grid; gap: 14px; grid-template-columns: 1fr; }
+  @media (min-width: 768px) { .grid3 { grid-template-columns: repeat(3, 1fr); } }
+  .game-card { border-radius: 18px; overflow: hidden; box-shadow: 0 4px 14px rgba(0,0,0,.06); background: white; }
+  .game-card.all { box-shadow: 0 0 0 3px #fbbf24, 0 4px 18px rgba(251,191,36,.3); }
+  .game-head { padding: 16px; color: white; background: linear-gradient(120deg, #4f46e5, #2563eb); }
+  .game-card.all .game-head { background: linear-gradient(120deg, #fbbf24, #f59e0b); }
+  .game-head .top { display:flex; justify-content:space-between; align-items:center; }
+  .game-head h3 { margin: 8px 0 0; font-size: 22px; }
+  .game-head p { margin: 2px 0 0; opacity:.9; font-size: 13px; }
+  .game-body { padding: 14px; }
+  .game-body .loc-link {
+    display:inline-flex; align-items:center; gap:4px; color: #4f46e5;
+    text-decoration:none; font-size: 14px;
+  }
+  .game-body .loc-link:hover { text-decoration: underline; }
+  .bar { height: 8px; background: #f3f4f6; border-radius: 999px; overflow: hidden; margin-top: 6px; }
+  .bar-fill { height: 100%; background: #6366f1; transition: width .6s; }
+  .all .bar-fill { background: #fbbf24; }
+
+  /* Todos */
+  .todo-head { background: linear-gradient(120deg, #ef4444, #e11d48); color: white; padding: 16px; }
+  .todo-head .top { display:flex; justify-content:space-between; align-items:center; }
+  .todo-head h3 { margin: 0; font-size: 18px; }
+  .todo-head p { margin: 4px 0 0; opacity: .9; font-size: 13px; }
+  .todo-head .pct { font-size: 28px; font-weight: 800; }
+  .todo-bar { margin-top: 10px; height: 8px; background: rgba(255,255,255,.25); border-radius: 999px; overflow: hidden; }
+  .todo-bar-fill { height: 100%; background: white; transition: width .4s; }
+  .todo {
+    width: 100%; text-align: right; display: flex; align-items: center; gap: 12px;
+    background: #f9fafb; border: none; padding: 12px; border-radius: 12px; margin-bottom: 8px;
+    cursor: pointer; transition: background .2s; font-family: inherit; font-size: 14px;
+  }
+  .todo:hover { background: #f3f4f6; }
+  .todo.done { background: #ecfdf5; color: #9ca3af; text-decoration: line-through; }
+  .todo .box { font-size: 22px; }
+
+  /* Flights/Transport */
+  .flight { padding: 14px; border-radius: 14px; background: #f0f9ff; border: 1px solid #bae6fd; }
+  .flight .row { display:flex; justify-content:space-between; align-items:center; }
+  .flight .badge { background: #0284c7; color: white; padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 700; }
+  .flight .when { color: #0c4a6e; font-weight: 800; }
+  .flight .line { color: #374151; font-size: 14px; margin-top: 6px; }
+  .flight .note { color: #6b7280; font-size: 12px; margin-top: 3px; }
+  .ride { display:flex; justify-content:space-between; align-items:center; padding: 12px; background:#f9fafb; border-radius:12px; margin-bottom: 8px; }
+  .ride .info b { display:block; font-size: 14px; }
+  .ride .info b a { color: #4f46e5; text-decoration: none; border-bottom: 1px dashed #c7d2fe; }
+  .ride .info b a:hover { border-bottom-style: solid; }
+  .ride .info span { font-size: 12px; color: #6b7280; }
+  .ride .meta { text-align: left; }
+  .ride .badge { background: white; border: 1px solid #d1d5db; padding: 3px 8px; border-radius: 8px; font-size: 11px; font-weight: 600; color: #4b5563; }
+  .ride .time { font-weight: 800; margin-top: 4px; }
+
+  .subheader {
+    margin: 18px 0 10px; font-weight: 700; color: #4f46e5; font-size: 15px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .subheader::before { content:""; flex:0 0 6px; height:18px; background:#4f46e5; border-radius:3px; }
+
+  .section { margin-bottom: 18px; }
+  .empty { text-align: center; color: #9ca3af; padding: 30px; }
+
+  footer { text-align:center; color:#9ca3af; font-size: 12px; padding: 18px 0; }
+
+  .pane { animation: fade .25s ease-out; }
+  @keyframes fade { from { opacity:0; transform: translateY(6px); } to { opacity:1; transform:none; } }
+
+  @media print {
+    body { background: white; }
+    .tabs, .toolbar { display: none !important; }
+    .day-body { display: block !important; }
+    .pane { display: block !important; }
+    .card { box-shadow: none; border: 1px solid #e5e7eb; page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="hero">
+    <div class="hero-content">
+      <div>
+        <h1>טיול ארה״ב 🇺🇸</h1>
+        <p>30.6.2026 — 9.7.2026</p>
+      </div>
+      <div class="stats">
+        <div class="stat">📅 <span>ימים</span> <b>11</b></div>
+        <div class="stat">📍 <span>פעילויות</span> <b id="stat-acts">0</b></div>
+        <div class="stat">🏨 <span>חדרים</span> <b id="stat-rooms">0</b></div>
+        <div class="stat">🏈 <span>משחקים</span> <b id="stat-games">0</b></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+  <div id="content"></div>
+
+  <footer>טיול משפחתי 2026 · נבנה ב-Copilot · קליק על שם מקום פותח Google Maps 📍</footer>
+</div>
+
+<script>
+const DATA = {"DAYS": [{"date": "30.6.2026", "dow": "יום שלישי", "title": "הגעה + משחק 1", "color": "#1E88E5", "emoji": "🛬", "items": [{"time": "05:50", "cat": "transport", "title": "נחיתה ב-JFK", "note": "הסעת CityRide למלון"}, {"time": "09:00", "cat": "hotel", "title": "צ׳ק-אין Manhattan Club", "note": "200 W 56th St"}, {"time": "בוקר", "cat": "food", "title": "ארוחת בוקר במלון + קניות בסופר", "note": ""}, {"time": "סיבוב", "cat": "attraction", "title": "Rockefeller Center", "note": ""}, {"time": "", "cat": "shop", "title": "FAO Schwarz", "note": "חנות משחקים"}, {"time": "11:00", "cat": "shop", "title": "LEGO Store Fifth Avenue", "note": "נפתח ב-11"}, {"time": "10:00", "cat": "shop", "title": "Nintendo New York", "note": "נפתח ב-10"}, {"time": "צהריים", "cat": "food", "title": "Le Botaniste / Dig / Shake Shack / CAVA", "note": "קרובים למלון"}, {"time": "13:30", "cat": "transport", "title": "יציאה למשחק", "note": "MetLife Stadium, NJ"}, {"time": "17:00", "cat": "game", "title": "משחק 1 — NJ", "note": "7 הולכים מתוך 12"}], "notes": ["Uber או הסעה סגורה למשחק"]}, {"date": "1.7.2026", "dow": "יום רביעי", "title": "Times Square + Summit", "color": "#E53935", "emoji": "🌆", "items": [{"time": "09:00", "cat": "food", "title": "ארוחת בוקר", "note": "Ellen's Stardust / Friedman's / Junior's ⭐"}, {"time": "10:30", "cat": "shop", "title": "קניות Midtown / Times Square", "note": "Nike, Disney, M&M's, Uniqlo"}, {"time": "13:30", "cat": "food", "title": "Carmine's / Tony's Di Napoli", "note": "ארוחת צהריים"}, {"time": "15:00", "cat": "rest", "title": "מנוחה במלון", "note": ""}, {"time": "18:00", "cat": "attraction", "title": "SUMMIT One Vanderbilt", "note": "45 E 42nd St — מונית"}, {"time": "19:45", "cat": "food", "title": "Empire Steak House East", "note": "151 E 50th St"}, {"time": "לילה", "cat": "transport", "title": "חזרה למלון", "note": "25 דק׳ הליכה או מונית"}], "notes": []}, {"date": "2.7.2026", "dow": "יום חמישי", "title": "American Dream Mall", "color": "#43A047", "emoji": "🎢", "items": [{"time": "08:45", "cat": "food", "title": "Friedman's", "note": "228 W 47th St"}, {"time": "בוקר", "cat": "transport", "title": "נסיעה ל-American Dream Mall", "note": "East Rutherford, NJ — 40 דק׳"}, {"time": "11:00", "cat": "attraction", "title": "Nickelodeon Universe", "note": "ניס הזמין 4 כרטיסים"}, {"time": "צהריים", "cat": "food", "title": "ארוחת צהריים בקניון", "note": ""}, {"time": "15:30", "cat": "rest", "title": "חזרה למלון + מנוחה", "note": ""}, {"time": "18:45", "cat": "food", "title": "Trattoria Dell'Arte", "note": "5 דק׳ מהמלון"}], "notes": []}, {"date": "3.7.2026", "dow": "יום שישי", "title": "Color Factory + Sloomoo", "color": "#FB8C00", "emoji": "🎨", "items": [{"time": "בוקר", "cat": "food", "title": "Le Pain Quotidien", "note": "5 דק׳ מהמלון"}, {"time": "10:30", "cat": "attraction", "title": "Color Factory", "note": "251 Spring St — מונית 20 דק׳"}, {"time": "12:00", "cat": "attraction", "title": "Sloomoo Institute", "note": "475 Broadway — רבע שעה הליכה"}, {"time": "צהריים", "cat": "food", "title": "Westville / Dig / Shake Shack", "note": ""}, {"time": "אחה״צ", "cat": "rest", "title": "מנוחה במלון", "note": ""}, {"time": "ערב", "cat": "food", "title": "Black Tap / Chelsea Market", "note": "ערב קליל"}], "notes": ["ניס: להשלים רכישת כרטיסים ל-Sloomoo"]}, {"date": "4.7.2026", "dow": "יום שבת", "title": "מוזיאון + זיקוקים", "color": "#8E24AA", "emoji": "🎆", "items": [{"time": "בוקר", "cat": "food", "title": "ארוחת בוקר במלון", "note": "אופציה: Le Pain בדרך"}, {"time": "10:30", "cat": "attraction", "title": "מוזיאון הטבע", "note": "מונית 10 דק׳"}, {"time": "13:00", "cat": "food", "title": "Shake Shack / Le Pain", "note": ""}, {"time": "אחה״צ", "cat": "rest", "title": "מנוחה במלון", "note": ""}, {"time": "18:30", "cat": "attraction", "title": "Macy's 4th of July Fireworks", "note": "זיקוקים — לאמת מיקום"}, {"time": "17:00", "cat": "game", "title": "משחק 3 — פילדלפיה", "note": "רק נתי הולך"}], "notes": ["לרכוש כרטיסים למוזיאון הטבע", "לאמת מיקום זיקוקים"]}, {"date": "5.7.2026", "dow": "יום ראשון", "title": "Central Park + משחק 2", "color": "#00ACC1", "emoji": "🌳", "items": [{"time": "09:00", "cat": "attraction", "title": "Central Park", "note": "ארוחת בוקר בפארק"}, {"time": "צהריים", "cat": "rest", "title": "מנוחה + ארוחת צהריים", "note": ""}, {"time": "13:00", "cat": "transport", "title": "הסעה למשחק מהמלון", "note": "MetLife Stadium, NJ"}, {"time": "16:00", "cat": "game", "title": "משחק 2 — NJ", "note": "כל הקבוצה! 12/12 ⭐"}], "notes": []}, {"date": "6.7.2026", "dow": "יום שני", "title": "מעבר ל-Skytop", "color": "#6D4C41", "emoji": "🏔️", "items": [{"time": "בוקר", "cat": "food", "title": "ארוחת בוקר במלון", "note": ""}, {"time": "11:00", "cat": "hotel", "title": "צ׳ק-אאוט Manhattan Club", "note": ""}, {"time": "12:00", "cat": "transport", "title": "הסעה ל-Skytop Lodge", "note": "Skytop, PA"}, {"time": "אחה״צ", "cat": "hotel", "title": "צ׳ק-אין Skytop Lodge", "note": "1 Skytop Dr"}], "notes": []}, {"date": "9.7.2026", "dow": "יום חמישי", "title": "חזרה הביתה", "color": "#3949AB", "emoji": "✈️", "items": [{"time": "בוקר", "cat": "food", "title": "ארוחת בוקר ב-Skytop", "note": ""}, {"time": "מאוחר", "cat": "hotel", "title": "צ׳ק-אאוט מאוחר", "note": "לפי זמינות"}, {"time": "16:00", "cat": "transport", "title": "הסעה לשדה JFK", "note": "4-4.5 שעות"}, {"time": "23:50", "cat": "transport", "title": "טיסת חזור", "note": "EL AL"}], "notes": ["לאמת זמני טיסות יומיים לפני"]}], "CATS": {"food": {"label": "אוכל", "emoji": "🍔", "color": "#FB923C"}, "attraction": {"label": "אטרקציה", "emoji": "📍", "color": "#A855F7"}, "shop": {"label": "קניות", "emoji": "🛍️", "color": "#EC4899"}, "hotel": {"label": "מלון", "emoji": "🏨", "color": "#3B82F6"}, "transport": {"label": "הסעה", "emoji": "🚗", "color": "#64748B"}, "game": {"label": "משחק", "emoji": "🏈", "color": "#F59E0B"}, "rest": {"label": "מנוחה", "emoji": "😴", "color": "#10B981"}}, "HOTELS": [{"name": "The Manhattan Club", "dates": "30.6 – 6.7", "address": "200 W 56th St, New York", "mapsQ": "The Manhattan Club, 200 W 56th St New York", "rooms": []}, {"name": "Skytop Lodge", "dates": "6.7 – 9.7", "address": "1 Skytop Dr, Skytop, PA 18357", "mapsQ": "Skytop Lodge, 1 Skytop Dr Skytop PA", "rooms": [{"family": "726653", "conf": "David Giladi", "guests": "Grand Suite"}, {"family": "726654", "conf": "Guy Giladi", "guests": "Grand Suite"}, {"family": "726655", "conf": "Nati Giladi", "guests": "Grand Suite"}, {"family": "726656", "conf": "Michal Giladi", "guests": "Junior Suite"}]}], "TRANSPORT": {"vendor": "CityRide", "voucher": "#795956-A", "lead": "גיא — 052-555-3676", "emergency": "+972-77-670-7001 / WhatsApp +972-54-629-9955", "rides": [{"date": "30.6", "route": "JFK → Manhattan Club", "time": "05:50", "note": "12 נוסעים, 2× Premium SUV", "mapsQ": "The Manhattan Club, 200 W 56th St New York"}, {"date": "6.7", "route": "Manhattan → Skytop Lodge", "time": "12:00", "note": "CityRide", "mapsQ": "Skytop Lodge, 1 Skytop Dr Skytop PA"}, {"date": "9.7", "route": "Skytop → JFK", "time": "16:00", "note": "4-4.5 שעות", "mapsQ": "JFK Airport"}]}, "FLIGHTS": [{"dir": "הלוך", "airline": "EL AL", "date": "30.6", "time": "01:00", "note": "נחיתה ~05:50 JFK"}, {"dir": "חזור", "airline": "EL AL", "date": "9.7", "time": "23:50", "note": "מ-JFK"}], "FLIGHT_BOOKINGS": [{"family": "GILADY", "pnr": "GH8FC", "guests": "גיא, ניס, אור, אלון, איתן, עוז, עמית"}, {"family": "HIRSH", "pnr": "7GJAQ9", "guests": "נתי, מיכל, נדב, נטע"}, {"family": "GILADI", "pnr": "95MYHC", "guests": "חיה ותמר"}, {"family": "GILADI", "pnr": "96AEUX", "guests": "רפאל"}], "GAMES": [{"id": 1, "date": "30.6", "dow": "ג׳", "time": "17:00", "loc": "MetLife, NJ", "going": 7, "total": 12, "mapsQ": "MetLife Stadium, East Rutherford NJ"}, {"id": 2, "date": "5.7", "dow": "א׳", "time": "16:00", "loc": "MetLife, NJ", "going": 12, "total": 12, "mapsQ": "MetLife Stadium, East Rutherford NJ"}, {"id": 3, "date": "4.7", "dow": "ש׳", "time": "17:00", "loc": "Philadelphia", "going": 1, "total": 12, "mapsQ": "Lincoln Financial Field, Philadelphia"}], "TODOS": ["לרכוש כרטיסים למוזיאון הטבע", "ניס: להשלים רכישת כרטיסים ל-Sloomoo", "לאמת מיקום זיקוקים 4 ביולי (Macy's)", "לאמת זמני טיסות יום לפני (הלוך + חזור)", "לסגור הסעה / Uber למשחק 30.6"], "PLACES": [["Rockefeller Center", "Rockefeller Center, New York"], ["LEGO Store Fifth Avenue", "LEGO Store Fifth Avenue New York"], ["LEGO Store", "LEGO Store Fifth Avenue New York"], ["Nintendo New York", "Nintendo NY 10 Rockefeller Plaza New York"], ["Nintendo NY", "Nintendo NY 10 Rockefeller Plaza New York"], ["FAO Schwarz", "FAO Schwarz, 30 Rockefeller Plaza New York"], ["SUMMIT One Vanderbilt", "SUMMIT One Vanderbilt, 45 E 42nd St New York"], ["Empire Steak House East", "Empire Steakhouse East, 151 E 50th St New York"], ["Empire Steak", "Empire Steakhouse East, 151 E 50th St New York"], ["Carmine's", "Carmine's Italian Restaurant, 200 W 44th St New York"], ["Tony's Di Napoli", "Tony's Di Napoli, 147 W 43rd St New York"], ["Tony's", "Tony's Di Napoli, 147 W 43rd St New York"], ["Friedman's", "Friedman's, 228 W 47th St New York"], ["Ellen's Stardust", "Ellen's Stardust Diner, New York"], ["Junior's", "Junior's Restaurant, Times Square New York"], ["American Dream Mall", "American Dream, East Rutherford NJ"], ["American Dream", "American Dream, East Rutherford NJ"], ["Nickelodeon Universe", "Nickelodeon Universe American Dream"], ["Trattoria Dell'Arte", "Trattoria Dell'Arte, 900 7th Ave New York"], ["Le Pain Quotidien", "Le Pain Quotidien Midtown New York"], ["Le Pain", "Le Pain Quotidien Midtown New York"], ["Color Factory", "Color Factory NYC, 251 Spring St New York"], ["Sloomoo Institute", "Sloomoo Institute, 475 Broadway New York"], ["Sloomoo", "Sloomoo Institute, 475 Broadway New York"], ["Chelsea Market", "Chelsea Market, 75 9th Ave New York"], ["Black Tap", "Black Tap Craft Burgers, New York"], ["Westville", "Westville Hudson Yards New York"], ["Shake Shack", "Shake Shack Times Square New York"], ["Le Botaniste", "Le Botaniste New York"], ["CAVA", "CAVA Times Square New York"], ["Dig", "Dig Inn New York"], ["מוזיאון הטבע", "American Museum of Natural History, New York"], ["Central Park", "Central Park, New York"], ["Macy's 4th of July", "Macy's 4th of July Fireworks New York"], ["MetLife Stadium", "MetLife Stadium, East Rutherford NJ"], ["MetLife", "MetLife Stadium, East Rutherford NJ"], ["JFK", "JFK Airport, New York"], ["Manhattan Club", "The Manhattan Club, 200 W 56th St New York"], ["Skytop Lodge", "Skytop Lodge, 1 Skytop Dr Skytop PA"], ["Skytop", "Skytop Lodge, 1 Skytop Dr Skytop PA"], ["Times Square", "Times Square, New York"], ["Midtown", "Midtown Manhattan, New York"]]};
+
+const state = {
+  tab: 'schedule',
+  search: '',
+  cat: 'all',
+  expanded: Object.fromEntries(DATA.DAYS.map((_, i) => [i, true])),
+  todos: loadTodos(),
+};
+
+function loadTodos() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('usa_trip_todos') || 'null');
+    if (Array.isArray(saved) && saved.length === DATA.TODOS.length) return saved;
+  } catch(e){}
+  return DATA.TODOS.map(t => ({ text: t, done: false }));
+}
+function saveTodos() {
+  try { localStorage.setItem('usa_trip_todos', JSON.stringify(state.todos)); } catch(e){}
+}
+
+document.getElementById('stat-acts').textContent  = DATA.DAYS.reduce((s,d)=>s+d.items.length,0);
+document.getElementById('stat-rooms').textContent = DATA.HOTELS.reduce((s,h)=>s+h.rooms.length,0) + DATA.FLIGHT_BOOKINGS.length;
+document.getElementById('stat-games').textContent = DATA.GAMES.length;
+
+const TABS = [
+  { id: 'schedule',  label: '📅 לוח יומי' },
+  { id: 'hotels',    label: '🏨 מלונות' },
+  { id: 'transport', label: '✈️ טיסות והסעות' },
+  { id: 'games',     label: '🏈 משחקים' },
+  { id: 'todos',     label: '☑️ משימות' },
+];
+function renderTabs() {
+  const open = state.todos.filter(t => !t.done).length;
+  const el = document.getElementById('tabs');
+  el.innerHTML = TABS.map(t => {
+    const label = t.id === 'todos' ? `☑️ משימות (${open})` : t.label;
+    return `<button class="tab ${state.tab===t.id?'active':''}" data-tab="${t.id}">${label}</button>`;
+  }).join('');
+  el.querySelectorAll('.tab').forEach(b => b.onclick = () => { state.tab = b.dataset.tab; render(); });
+}
+
+function esc(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function mapsUrl(q) { return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q); }
+
+// Match item text against PLACES list, return Google Maps URL or null
+function findMapsQuery(text) {
+  if (!text) return null;
+  for (const [key, q] of DATA.PLACES) {
+    if (text.indexOf(key) !== -1) return q;
+  }
+  return null;
+}
+
+function titleWithMap(title, note) {
+  const text = title + ' ' + (note || '');
+  const q = findMapsQuery(text);
+  if (q) {
+    return `<a href="${mapsUrl(q)}" target="_blank" rel="noopener">${esc(title)}</a> <a class="map-btn" href="${mapsUrl(q)}" target="_blank" rel="noopener">📍 מפה</a>`;
+  }
+  return esc(title);
+}
+
+// ===== SCHEDULE =====
+function renderSchedule() {
+  const q = state.search.trim().toLowerCase();
+  const filtered = DATA.DAYS.map((d, idx) => {
+    const items = d.items.filter(it => {
+      const okCat = state.cat === 'all' || it.cat === state.cat;
+      const okTxt = !q || (it.title + ' ' + it.note + ' ' + d.date + ' ' + d.dow).toLowerCase().includes(q);
+      return okCat && okTxt;
+    });
+    return { ...d, items, _i: idx };
+  }).filter(d => d.items.length > 0);
+
+  const toolbar = `
+    <div class="card section">
+      <div class="card-pad toolbar">
+        <div class="search"><input id="search-input" placeholder="חיפוש (מסעדה, אטרקציה, תאריך...)" value="${esc(state.search)}"></div>
+        <div class="chips">
+          <button class="chip ${state.cat==='all'?'active':''}" data-cat="all">הכל</button>
+          ${Object.entries(DATA.CATS).map(([k,v])=>`<button class="chip ${state.cat===k?'active':''}" data-cat="${k}">${v.emoji} ${esc(v.label)}</button>`).join('')}
+        </div>
+      </div>
+    </div>`;
+
+  let cardsHtml = '';
+  if (filtered.length === 0) {
+    cardsHtml = `<div class="card"><div class="empty">לא נמצאו תוצאות</div></div>`;
+  } else {
+    cardsHtml = filtered.map(d => {
+      const isOpen = state.expanded[d._i];
+      const itemsHtml = d.items.map(it => {
+        const c = DATA.CATS[it.cat] || DATA.CATS.attraction;
+        return `
+          <div class="item">
+            <div class="ic" style="background:${c.color}22;color:${c.color}">${c.emoji}</div>
+            <div class="body">
+              <div class="row1">
+                <span class="title">${titleWithMap(it.title, it.note)}</span>
+                ${it.time ? `<span class="time">${esc(it.time)}</span>` : ''}
+              </div>
+              ${it.note ? `<div class="note">${esc(it.note)}</div>` : ''}
+            </div>
+          </div>`;
+      }).join('');
+      const notesHtml = (d.notes && d.notes.length) ? `
+        <div class="notes-box">
+          <b>⚠️ שים לב</b>
+          <ul>${d.notes.map(n=>`<li>${esc(n)}</li>`).join('')}</ul>
+        </div>` : '';
+      return `
+        <div class="card ${isOpen?'open':''}" data-day-card="${d._i}">
+          <button class="day-head" data-toggle="${d._i}" style="background: linear-gradient(120deg, ${d.color}, ${d.color}cc)">
+            <div class="right">
+              <span class="day-emoji">${d.emoji}</span>
+              <div>
+                <div class="day-date">${esc(d.date)}</div>
+                <div class="day-sub">${esc(d.dow)} · ${esc(d.title)}</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span class="pill">${d.items.length} פריטים</span>
+              <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </button>
+          <div class="day-body">${itemsHtml}${notesHtml}</div>
+        </div>`;
+    }).join('');
+  }
+  return toolbar + cardsHtml;
+}
+
+// ===== HOTELS =====
+function renderHotels() {
+  return `<div class="grid2">` + DATA.HOTELS.map(h => `
+    <div class="card">
+      <div class="hotel-head">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <h3>${esc(h.name)}</h3>
+            <p>${esc(h.dates)}</p>
+          </div>
+          <div style="font-size:28px">🏨</div>
+        </div>
+        <a href="${mapsUrl(h.mapsQ)}" target="_blank" rel="noopener">📍 ${esc(h.address)} ↗</a>
+      </div>
+      <div class="card-pad">
+        ${h.rooms.length === 0 ? `<div style="text-align:center;color:#6b7280;font-size:14px;padding:8px">פרטי הזמנת הטיסה לפי משפחה — בלשונית ״טיסות והסעות״ ✈️</div>` :
+          h.rooms.map(r => `
+            <div class="room">
+              <div class="info"><b>${esc(r.family)}</b><span>${esc(r.guests)}</span></div>
+              <span class="conf">${esc(r.conf)}</span>
+            </div>`).join('')
+        }
+      </div>
+    </div>`).join('') + `</div>`;
+}
+
+// ===== TRANSPORT (Flights + CityRide + Flight bookings) =====
+function renderTransport() {
+  return `
+    <div class="card section">
+      <div class="section-head" style="background:linear-gradient(120deg,#0ea5e9,#2563eb)">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="font-size:26px">✈️</div>
+          <div><h3>טיסות EL AL</h3><p>לאמת זמני טיסות יום-יומיים לפני</p></div>
+        </div>
+      </div>
+      <div class="card-pad" style="display:grid;gap:10px;grid-template-columns:1fr">
+        ${DATA.FLIGHTS.map(f => `
+          <div class="flight">
+            <div class="row">
+              <span class="badge">${esc(f.dir)}</span>
+              <span class="when">${esc(f.date)} · ${esc(f.time)}</span>
+            </div>
+            <div class="line">${esc(f.airline)}</div>
+            <div class="note">${esc(f.note)}</div>
+          </div>`).join('')}
+
+        <div class="subheader">קודי הזמנת טיסה (PNR) לפי משפחה</div>
+        ${DATA.FLIGHT_BOOKINGS.map(b => `
+          <div class="ride">
+            <div class="info"><b>${esc(b.family)}</b><span>${esc(b.guests)}</span></div>
+            <div class="meta"><span class="conf" style="background:#0284c7">${esc(b.pnr)}</span></div>
+          </div>`).join('')}
+      </div>
+    </div>
+
+    <div class="card section">
+      <div class="section-head" style="background:linear-gradient(120deg,#374151,#111827)">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="font-size:26px">🚐</div>
+          <div style="flex:1">
+            <h3>${esc(DATA.TRANSPORT.vendor)}</h3>
+            <p>Voucher ${esc(DATA.TRANSPORT.voucher)}</p>
+          </div>
+        </div>
+        <div style="margin-top:10px;display:grid;gap:6px;grid-template-columns:1fr;font-size:13px;opacity:.95">
+          <div>👥 Lead: ${esc(DATA.TRANSPORT.lead)}</div>
+          <div>📞 ${esc(DATA.TRANSPORT.emergency)}</div>
+        </div>
+      </div>
+      <div class="card-pad">
+        ${DATA.TRANSPORT.rides.map(r => `
+          <div class="ride">
+            <div class="info"><b><a href="${mapsUrl(r.mapsQ)}" target="_blank" rel="noopener">${esc(r.route)} 📍</a></b><span>${esc(r.note)}</span></div>
+            <div class="meta"><span class="badge">${esc(r.date)}</span><div class="time">${esc(r.time)}</div></div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+// ===== GAMES =====
+function renderGames() {
+  return `<div class="grid3">` + DATA.GAMES.map(g => {
+    const pct = (g.going / g.total) * 100;
+    const all = g.going === g.total;
+    return `
+      <div class="game-card ${all?'all':''}">
+        <div class="game-head">
+          <div class="top"><span style="font-size:28px">🏈</span>${all?'<span style="font-size:20px">⭐</span>':''}</div>
+          <h3>משחק #${g.id}</h3>
+          <p>${esc(g.date)} ${esc(g.dow)} · ${esc(g.time)}</p>
+        </div>
+        <div class="game-body">
+          <a class="loc-link" href="${mapsUrl(g.mapsQ)}" target="_blank" rel="noopener">📍 ${esc(g.loc)} ↗</a>
+          <div style="margin-top:10px;display:flex;justify-content:space-between;font-size:13px">
+            <span style="color:#6b7280">משתתפים</span><b>${g.going} / ${g.total}</b>
+          </div>
+          <div class="bar"><div class="bar-fill" style="width:${pct}%"></div></div>
+        </div>
+      </div>`;
+  }).join('') + `</div>`;
+}
+
+// ===== TODOS =====
+function renderTodos() {
+  const done = state.todos.filter(t => t.done).length;
+  const pct = Math.round((done / state.todos.length) * 100);
+  return `
+    <div class="card">
+      <div class="todo-head">
+        <div class="top">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="font-size:28px">☑️</div>
+            <div><h3>משימות פתוחות</h3><p>${done} מתוך ${state.todos.length} הושלמו</p></div>
+          </div>
+          <div class="pct">${pct}%</div>
+        </div>
+        <div class="todo-bar"><div class="todo-bar-fill" style="width:${pct}%"></div></div>
+      </div>
+      <div class="card-pad">
+        ${state.todos.map((t,i)=>`
+          <button class="todo ${t.done?'done':''}" data-todo="${i}">
+            <span class="box">${t.done ? '✅' : '⬜'}</span>
+            <span style="flex:1">${esc(t.text)}</span>
+          </button>`).join('')}
+      </div>
+    </div>`;
+}
+
+function render() {
+  renderTabs();
+  let html = '';
+  if (state.tab === 'schedule')  html = renderSchedule();
+  if (state.tab === 'hotels')    html = renderHotels();
+  if (state.tab === 'transport') html = renderTransport();
+  if (state.tab === 'games')     html = renderGames();
+  if (state.tab === 'todos')     html = renderTodos();
+  const c = document.getElementById('content');
+  c.innerHTML = `<div class="pane">${html}</div>`;
+  bindEvents();
+}
+
+function bindEvents() {
+  if (state.tab === 'schedule') {
+    const si = document.getElementById('search-input');
+    if (si) si.addEventListener('input', e => { state.search = e.target.value; renderScheduleOnly(); });
+    document.querySelectorAll('.chip').forEach(b => b.onclick = () => { state.cat = b.dataset.cat; renderScheduleOnly(); });
+    document.querySelectorAll('[data-toggle]').forEach(b => b.onclick = () => {
+      const i = +b.dataset.toggle; state.expanded[i] = !state.expanded[i]; renderScheduleOnly();
+    });
+  }
+  if (state.tab === 'todos') {
+    document.querySelectorAll('[data-todo]').forEach(b => b.onclick = () => {
+      const i = +b.dataset.todo; state.todos[i].done = !state.todos[i].done;
+      saveTodos(); render();
+    });
+  }
+}
+
+function renderScheduleOnly() {
+  const focused = document.activeElement && document.activeElement.id === 'search-input';
+  const selStart = focused ? document.activeElement.selectionStart : null;
+  const c = document.getElementById('content');
+  c.innerHTML = `<div class="pane">${renderSchedule()}</div>`;
+  const si = document.getElementById('search-input');
+  if (si) {
+    si.addEventListener('input', e => { state.search = e.target.value; renderScheduleOnly(); });
+    if (focused) { si.focus(); try { si.setSelectionRange(selStart, selStart); } catch(e){} }
+  }
+  document.querySelectorAll('.chip').forEach(b => b.onclick = () => { state.cat = b.dataset.cat; renderScheduleOnly(); });
+  document.querySelectorAll('[data-toggle]').forEach(b => b.onclick = () => {
+    const i = +b.dataset.toggle; state.expanded[i] = !state.expanded[i]; renderScheduleOnly();
+  });
+}
+
+render();
+</script>
+</body>
+</html>
